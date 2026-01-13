@@ -1,59 +1,40 @@
 import UIKit
 import Vision
-import CoreImage
+import CoreML
 
-/// Modern OCR service with async/await, error handling, and logging
+/// Modern AI service with async/await, error handling, and improved book detection
 @MainActor
-final class OCRService: ObservableObject {
-    private let amazonService: AmazonService
+final class AIService: ObservableObject {
     private var config: AppConfiguration { AppConfiguration.shared }
     private let imageCache = ImageCache.shared
-    private let retryManager = RetryManager(maxAttempts: 3)
-    
-    init(amazonService: AmazonService = AmazonService()) {
-        self.amazonService = amazonService
-    }
     
     /// Recognize books from image using async/await
     func recognizeBooks(from image: UIImage) async throws -> [Book] {
-        // Step 1: Detect and correct image orientation
+        // Step 1: Detect and correct image orientation for better recognition
         let orientedImage = detectAndCorrectOrientation(image: image)
         
         guard let cgImage = orientedImage.cgImage else {
             throw AppError.imageProcessingFailed
         }
         
-        // Step 2: Try to isolate individual book spines using rectangle detection
+        // Step 2: Try rectangle detection to isolate individual book spines
         do {
             let rectangles = try await detectRectangles(in: cgImage)
             
             if !rectangles.isEmpty {
                 let bookSpines = groupRectanglesIntoBooks(rectangles)
-                let books = try await extractTextFromBookSpines(bookSpines: bookSpines, cgImage: cgImage, image: orientedImage)
-                
-                // Validate with Amazon if books found
-                if !books.isEmpty {
-                    return try await validateAndUpdateBooks(books: books)
-                }
-                return books
+                return try await extractTextFromBookSpines(bookSpines: bookSpines, cgImage: cgImage, image: orientedImage)
             }
         } catch {
             logError(error)
-            // Fall through to full image processing
+            // Fall through to text-based detection
         }
         
-        // Step 3: Fallback - process entire image with OCR
-        let books = try await processImageWithOCR(image: orientedImage)
-        
-        // Validate with Amazon if books found
-        if !books.isEmpty {
-            return try await validateAndUpdateBooks(books: books)
-        }
-        
-        return books
+        // Step 3: Fallback to text-based detection (processes entire image)
+        return try await processWithTextRecognition(cgImage: cgImage, image: orientedImage)
     }
     
-    /// Legacy completion handler support for backward compatibility
+    /// Legacy completion handler support
     func recognizeBooks(from image: UIImage, completion: @escaping ([Book]) -> Void) {
         Task {
             do {
@@ -72,12 +53,43 @@ final class OCRService: ObservableObject {
     
     // MARK: - Private Methods
     
-    /// Detect rectangles (book spines) in the image
+    /// Detect and correct image orientation for vertical book spines
+    private func detectAndCorrectOrientation(image: UIImage) -> UIImage {
+        let isPortrait = image.size.height > image.size.width * 1.5
+        
+        // If image is very tall (portrait), text might be vertical
+        // Rotate to make text horizontal for better OCR
+        if isPortrait {
+            return rotateImage(image: image, degrees: -90)
+        }
+        
+        return image
+    }
+    
+    /// Rotate image by degrees
+    private func rotateImage(image: UIImage, degrees: CGFloat) -> UIImage {
+        let radians = degrees * .pi / 180
+        let rotatedSize = CGRect(origin: .zero, size: image.size)
+            .applying(CGAffineTransform(rotationAngle: radians))
+            .integral.size
+        
+        UIGraphicsBeginImageContextWithOptions(rotatedSize, false, image.scale)
+        defer { UIGraphicsEndImageContext() }
+        
+        guard let context = UIGraphicsGetCurrentContext() else { return image }
+        
+        context.translateBy(x: rotatedSize.width / 2, y: rotatedSize.height / 2)
+        context.rotate(by: radians)
+        image.draw(in: CGRect(x: -image.size.width / 2, y: -image.size.height / 2, width: image.size.width, height: image.size.height))
+        
+        return UIGraphicsGetImageFromCurrentImageContext() ?? image
+    }
+    
     private func detectRectangles(in cgImage: CGImage) async throws -> [VNRectangleObservation] {
         return try await withCheckedThrowingContinuation { continuation in
             let request = VNDetectRectanglesRequest { request, error in
                 if let error = error {
-                    continuation.resume(throwing: AppError.ocrFailed(reason: error.localizedDescription))
+                    continuation.resume(throwing: AppError.aiRecognitionFailed(reason: error.localizedDescription))
                     return
                 }
                 
@@ -89,7 +101,7 @@ final class OCRService: ObservableObject {
                 continuation.resume(returning: observations)
             }
             
-            request.minimumAspectRatio = 0.1 // Allow tall thin rectangles (book spines)
+            request.minimumAspectRatio = 0.1
             request.maximumAspectRatio = 10.0
             request.minimumSize = 0.01
             request.minimumConfidence = 0.3
@@ -100,15 +112,13 @@ final class OCRService: ObservableObject {
                 do {
                     try handler.perform([request])
                 } catch {
-                    continuation.resume(throwing: AppError.ocrFailed(reason: error.localizedDescription))
+                    continuation.resume(throwing: AppError.aiRecognitionFailed(reason: error.localizedDescription))
                 }
             }
         }
     }
     
-    /// Group rectangles into individual books based on position
     private func groupRectanglesIntoBooks(_ rectangles: [VNRectangleObservation]) -> [[VNRectangleObservation]] {
-        // Sort by X position (left to right)
         let sorted = rectangles.sorted { $0.boundingBox.minX < $1.boundingBox.minX }
         
         var bookGroups: [[VNRectangleObservation]] = []
@@ -118,15 +128,12 @@ final class OCRService: ObservableObject {
             if currentGroup.isEmpty {
                 currentGroup.append(rect)
             } else {
-                // Check if this rectangle is part of the same book (close X position)
                 let lastRect = currentGroup.last!
                 let xDistance = abs(rect.boundingBox.minX - lastRect.boundingBox.maxX)
                 
-                // If rectangles are close horizontally, they're the same book
                 if xDistance < 0.05 {
                     currentGroup.append(rect)
                 } else {
-                    // New book
                     bookGroups.append(currentGroup)
                     currentGroup = [rect]
                 }
@@ -140,26 +147,21 @@ final class OCRService: ObservableObject {
         return bookGroups
     }
     
-    /// Extract text from each isolated book spine
     private func extractTextFromBookSpines(bookSpines: [[VNRectangleObservation]], cgImage: CGImage, image: UIImage) async throws -> [Book] {
         return try await withThrowingTaskGroup(of: Book?.self) { group in
             var books: [Book] = []
             
             for spineGroup in bookSpines {
-                // Get bounding box for this book
                 let combinedBox = combineBoundingBoxes(spineGroup)
                 
-                // Crop image to this book's region
                 guard let croppedImage = cropImage(cgImage: cgImage, boundingBox: combinedBox, imageSize: image.size) else {
                     continue
                 }
                 
                 group.addTask { @MainActor in
-                    // Process this individual book spine
                     let textData = try? await self.recognizeTextInRegion(cgImage: croppedImage)
                     if let textData = textData, !textData.isEmpty {
-                        let books = self.parseBooksFromText(textData.map { $0.text }, image: image)
-                        return books.first
+                        return self.parseBookFromText(textData, image: image)
                     }
                     return nil
                 }
@@ -175,7 +177,6 @@ final class OCRService: ObservableObject {
         }
     }
     
-    /// Combine multiple rectangles into one bounding box
     private func combineBoundingBoxes(_ rectangles: [VNRectangleObservation]) -> CGRect {
         guard !rectangles.isEmpty else { return .zero }
         
@@ -194,10 +195,9 @@ final class OCRService: ObservableObject {
         return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
     }
     
-    /// Crop image to bounding box region
     private func cropImage(cgImage: CGImage, boundingBox: CGRect, imageSize: CGSize) -> CGImage? {
         let x = boundingBox.minX * imageSize.width
-        let y = (1.0 - boundingBox.maxY) * imageSize.height // Flip Y coordinate
+        let y = (1.0 - boundingBox.maxY) * imageSize.height
         let width = boundingBox.width * imageSize.width
         let height = boundingBox.height * imageSize.height
         
@@ -205,12 +205,11 @@ final class OCRService: ObservableObject {
         return cgImage.cropping(to: cropRect)
     }
     
-    /// Recognize text in a specific region
     private func recognizeTextInRegion(cgImage: CGImage) async throws -> [(text: String, confidence: Float)] {
         return try await withCheckedThrowingContinuation { continuation in
             let request = VNRecognizeTextRequest { request, error in
                 if let error = error {
-                    continuation.resume(throwing: AppError.ocrFailed(reason: error.localizedDescription))
+                    continuation.resume(throwing: AppError.aiRecognitionFailed(reason: error.localizedDescription))
                     return
                 }
                 
@@ -223,7 +222,7 @@ final class OCRService: ObservableObject {
                 
                 for observation in observations {
                     guard let topCandidate = observation.topCandidates(1).first,
-                          topCandidate.confidence > self.config.ocrConfidenceThreshold else {
+                          topCandidate.confidence > self.config.aiConfidenceThreshold else {
                         continue
                     }
                     
@@ -250,111 +249,27 @@ final class OCRService: ObservableObject {
                 do {
                     try handler.perform([request])
                 } catch {
-                    continuation.resume(throwing: AppError.ocrFailed(reason: error.localizedDescription))
+                    continuation.resume(throwing: AppError.aiRecognitionFailed(reason: error.localizedDescription))
                 }
             }
         }
     }
     
-    private func detectAndCorrectOrientation(image: UIImage) -> UIImage {
-        let isPortrait = image.size.height > image.size.width * 1.5
-        
-        if isPortrait {
-            return rotateImage(image: image, degrees: -90)
-        }
-        
-        return image
+    private func processWithTextRecognition(cgImage: CGImage, image: UIImage) async throws -> [Book] {
+        let textData = try await recognizeTextInRegion(cgImage: cgImage)
+        return parseBooksFromTextLines(textData.map { $0.text }, image: image)
     }
     
-    private func rotateImage(image: UIImage, degrees: CGFloat) -> UIImage {
-        let radians = degrees * .pi / 180
-        let rotatedSize = CGRect(origin: .zero, size: image.size)
-            .applying(CGAffineTransform(rotationAngle: radians))
-            .integral.size
-        
-        UIGraphicsBeginImageContextWithOptions(rotatedSize, false, image.scale)
-        defer { UIGraphicsEndImageContext() }
-        
-        guard let context = UIGraphicsGetCurrentContext() else { return image }
-        
-        context.translateBy(x: rotatedSize.width / 2, y: rotatedSize.height / 2)
-        context.rotate(by: radians)
-        image.draw(in: CGRect(x: -image.size.width / 2, y: -image.size.height / 2, width: image.size.width, height: image.size.height))
-        
-        return UIGraphicsGetImageFromCurrentImageContext() ?? image
+    private func parseBookFromText(_ textData: [(text: String, confidence: Float)], image: UIImage) -> Book? {
+        guard !textData.isEmpty else { return nil }
+        let texts = textData.map { $0.text }
+        return parseBooksFromTextLines(texts, image: image).first
     }
     
-    private func processImageWithOCR(image: UIImage) async throws -> [Book] {
-        guard let cgImage = image.cgImage else {
-            throw AppError.imageProcessingFailed
-        }
-        
-        // Preprocess image
-        let processedImage = preprocessImage(image) ?? image
-        guard let processedCGImage = processedImage.cgImage else {
-            throw AppError.imageProcessingFailed
-        }
-        
-        return try await withCheckedThrowingContinuation { continuation in
-            let request = VNRecognizeTextRequest { [weak self] request, error in
-                if let error = error {
-                    let appError = AppError.ocrFailed(reason: error.localizedDescription)
-                    self?.logError(appError)
-                    continuation.resume(throwing: appError)
-                    return
-                }
-                
-                guard let observations = request.results as? [VNRecognizedTextObservation],
-                      !observations.isEmpty else {
-                    continuation.resume(returning: [])
-                    return
-                }
-                
-                // Extract text with confidence
-                var allTextLines: [(text: String, confidence: Float)] = []
-                for observation in observations {
-                    guard let topCandidate = observation.topCandidates(1).first else {
-                        continue
-                    }
-                    
-                    if topCandidate.confidence > self?.config.ocrConfidenceThreshold ?? 0.3 {
-                        let text = topCandidate.string.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if !text.isEmpty && text.count > 1 {
-                            allTextLines.append((text: text, confidence: topCandidate.confidence))
-                        }
-                    }
-                }
-                
-                // Parse books from text
-                let books = self?.parseBooksFromText(allTextLines.map { $0.text }, image: image) ?? []
-                continuation.resume(returning: books)
-            }
-            
-            request.recognitionLevel = .accurate
-            request.usesLanguageCorrection = true
-            request.recognitionLanguages = ["en-US"]
-            
-            if #available(iOS 16.0, *) {
-                request.automaticallyDetectsLanguage = true
-            }
-            
-            let handler = VNImageRequestHandler(cgImage: processedCGImage, options: [:])
-            
-            Task.detached(priority: .userInitiated) {
-                do {
-                    try handler.perform([request])
-                } catch {
-                    let appError = AppError.ocrFailed(reason: error.localizedDescription)
-                    continuation.resume(throwing: appError)
-                }
-            }
-        }
-    }
-    
-    private func parseBooksFromText(_ textLines: [String], image: UIImage) -> [Book] {
+    private func parseBooksFromTextLines(_ textLines: [String], image: UIImage) -> [Book] {
         guard !textLines.isEmpty else { return [] }
         
-        let filteredLines = textLines
+        let cleanedLines = textLines
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { line in
                 line.count > 2 &&
@@ -363,30 +278,30 @@ final class OCRService: ObservableObject {
                 !line.lowercased().contains("check each product")
             }
         
-        guard !filteredLines.isEmpty else { return [] }
+        guard !cleanedLines.isEmpty else { return [] }
         
         var books: [Book] = []
         var i = 0
         
-        while i < filteredLines.count {
+        while i < cleanedLines.count {
             var title = ""
             var author: String? = nil
             var publisher: String? = nil
             
-            if let parsed = parseBookLine(filteredLines[i]) {
+            if let parsed = parseBookLine(cleanedLines[i]) {
                 title = parsed.title
                 author = parsed.author
                 publisher = parsed.publisher
                 i += 1
             } else {
-                title = filteredLines[i]
+                title = cleanedLines[i]
                 i += 1
                 
                 // Collect author lines (may be multiple authors)
                 var authorLines: [String] = []
                 
-                while i < filteredLines.count {
-                    let nextLine = filteredLines[i]
+                while i < cleanedLines.count {
+                    let nextLine = cleanedLines[i]
                     
                     // Check if it's a publisher - if so, stop collecting authors
                     if isPublisherName(nextLine) {
@@ -407,8 +322,8 @@ final class OCRService: ObservableObject {
                         
                         // If we have 2-3 author lines, likely we have all authors
                         // Check next line to see if it's a publisher
-                        if i < filteredLines.count && isPublisherName(filteredLines[i]) {
-                            publisher = filteredLines[i]
+                        if i < cleanedLines.count && isPublisherName(cleanedLines[i]) {
+                            publisher = cleanedLines[i]
                             i += 1
                             break
                         }
@@ -558,90 +473,13 @@ final class OCRService: ObservableObject {
         )
     }
     
-    private func validateAndUpdateBooks(books: [Book]) async throws -> [Book] {
-        return try await withThrowingTaskGroup(of: Book.self) { group in
-            var updatedBooks: [Book] = []
-            
-            for book in books {
-                group.addTask {
-                    do {
-                        let result = try await self.amazonService.lookupAndValidate(title: book.title, author: book.author)
-                        return Book(
-                            title: result.title ?? book.title,
-                            author: result.author ?? book.author,
-                            publisher: result.publisher ?? book.publisher,
-                            isbn: book.isbn,
-                            dateAdded: book.dateAdded,
-                            imageData: book.imageData,
-                            amazonPrice: result.price,
-                            amazonURL: result.url,
-                            notes: book.notes
-                        )
-                    } catch {
-                        // Return original book if validation fails
-                        return book
-                    }
-                }
-            }
-            
-            for try await book in group {
-                updatedBooks.append(book)
-            }
-            
-            return updatedBooks
-        }
-    }
-    
-    private func preprocessImage(_ image: UIImage) -> UIImage? {
-        guard let ciImage = CIImage(image: image) else { return nil }
-        
-        let context = CIContext()
-        var processedImage = ciImage
-        
-        // Sharpen
-        if let filter = CIFilter(name: "CISharpenLuminance") {
-            filter.setValue(processedImage, forKey: kCIInputImageKey)
-            filter.setValue(0.4, forKey: kCIInputSharpnessKey)
-            if let output = filter.outputImage {
-                processedImage = output
-            }
-        }
-        
-        // Contrast
-        if let filter = CIFilter(name: "CIColorControls") {
-            filter.setValue(processedImage, forKey: kCIInputImageKey)
-            filter.setValue(1.3, forKey: kCIInputContrastKey)
-            filter.setValue(0.05, forKey: kCIInputBrightnessKey)
-            if let output = filter.outputImage {
-                processedImage = output
-            }
-        }
-        
-        // Grayscale
-        if let filter = CIFilter(name: "CIColorMonochrome") {
-            filter.setValue(processedImage, forKey: kCIInputImageKey)
-            filter.setValue(CIColor.gray, forKey: kCIInputColorKey)
-            filter.setValue(1.0, forKey: kCIInputIntensityKey)
-            if let output = filter.outputImage,
-               let cgImage = context.createCGImage(output, from: output.extent) {
-                return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
-            }
-        }
-        
-        if let cgImage = context.createCGImage(processedImage, from: processedImage.extent) {
-            return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
-        }
-        
-        return nil
-    }
-    
     // MARK: - Logging
     
     private func logError(_ error: Error) {
         if #available(iOS 14.0, *) {
-            AppLogger.log("OCR Error: \(error.localizedDescription)", level: .error, category: AppLogger.ocr)
+            AppLogger.log("AI Error: \(error.localizedDescription)", level: .error, category: AppLogger.ai)
         } else {
-            SimpleLogger.log("OCR Error: \(error.localizedDescription)", level: "ERROR")
+            SimpleLogger.log("AI Error: \(error.localizedDescription)", level: "ERROR")
         }
     }
 }

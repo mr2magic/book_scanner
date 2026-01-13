@@ -3,7 +3,6 @@ import SwiftUI
 struct ExportView: View {
     let books: [Book]
     @Environment(\.dismiss) var dismiss
-    @StateObject private var csvService = CSVExportService()
     @State private var showShareSheet = false
     @State private var fileURL: URL?
     
@@ -48,6 +47,7 @@ struct ExportView: View {
     }
     
     private func exportToCSV() {
+        let csvService = CSVExportService()
         if let url = csvService.exportBooks(books) {
             fileURL = url
             showShareSheet = true

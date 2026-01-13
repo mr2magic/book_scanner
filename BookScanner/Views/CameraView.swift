@@ -1,15 +1,25 @@
 import SwiftUI
 import AVFoundation
 import PhotosUI
+import UIKit
 
 struct CameraView: View {
     @Environment(\.modelContext) private var modelContext
     @StateObject private var ocrService = OCRService()
+    @StateObject private var aiService = AIService()
+    @StateObject private var settings = AppSettings()
     @State private var showImagePicker = false
+    @State private var showPhotoLibraryPicker = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
     @State private var showProcessing = false
     @State private var showResult = false
+    @State private var showComparison = false
     @State private var recognizedBooks: [Book] = []
+    @State private var ocrBooks: [Book] = []
+    @State private var aiBooks: [Book] = []
+    @State private var errorMessage: String?
+    @State private var showErrorAlert = false
     
     var body: some View {
         NavigationView {
@@ -23,50 +33,174 @@ struct CameraView: View {
                         .padding()
                 }
                 
-                Button(action: {
-                    showImagePicker = true
-                }) {
-                    HStack {
-                        Image(systemName: "camera.fill")
-                        Text("Take Photo")
+                // Scan method selection
+                Picker("Scan Method", selection: $settings.scanMethod) {
+                    ForEach(AppSettings.ScanMethod.allCases, id: \.self) { method in
+                        Text(method.rawValue).tag(method)
                     }
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .cornerRadius(12)
                 }
-                .accessibilityLabel("Take photo of book spines")
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 40)
+                .onChange(of: settings.scanMethod) { _, _ in
+                    settings.saveSettings()
+                }
+                
+                VStack(spacing: 12) {
+                    Button(action: {
+                        showImagePicker = true
+                    }) {
+                        HStack {
+                            Image(systemName: "camera.fill")
+                            Text("Take Photo")
+                        }
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .cornerRadius(12)
+                    }
+                    .accessibilityLabel("Take photo of book spines")
+                    
+                    Button(action: {
+                        showPhotoLibraryPicker = true
+                    }) {
+                        HStack {
+                            Image(systemName: "photo.on.rectangle")
+                            Text("Choose from Library")
+                        }
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green)
+                        .cornerRadius(12)
+                    }
+                    .accessibilityLabel("Choose image from photo library")
+                }
                 .padding(.horizontal, 40)
                 
                 if showProcessing {
                     ProgressView("Processing image...")
                         .padding()
                 }
+                
+                // Version number
+                Text("Version 1.0")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 20)
             }
             .navigationTitle("Scan Books")
             .sheet(isPresented: $showImagePicker) {
-                ImagePicker(image: $selectedImage, onImageSelected: { image in
+                ImagePicker(image: $selectedImage, sourceType: .camera, onImageSelected: { image in
                     processImage(image)
                 })
             }
-            .sheet(isPresented: $showResult) {
-                BookRecognitionResultView(books: recognizedBooks) { books in
-                    saveBooks(books)
+            .sheet(isPresented: $showPhotoLibraryPicker) {
+                ImagePicker(image: $selectedImage, sourceType: .photoLibrary, onImageSelected: { image in
+                    processImage(image)
+                })
+            }
+            .onChange(of: selectedPhotoItem) { _, newItem in
+                Task {
+                    guard let newItem = newItem else { return }
+                    
+                    do {
+                        if let data = try await newItem.loadTransferable(type: Data.self),
+                           let image = UIImage(data: data) {
+                            await MainActor.run {
+                                selectedImage = image
+                                processImage(image)
+                            }
+                        } else {
+                            print("Failed to load image data")
+                        }
+                    } catch {
+                        print("Error loading image: \(error.localizedDescription)")
+                    }
                 }
+            }
+            .sheet(isPresented: $showResult) {
+                if settings.compareResults && !ocrBooks.isEmpty && !aiBooks.isEmpty {
+                    ComparisonView(ocrBooks: ocrBooks, aiBooks: aiBooks) { books in
+                        saveBooks(books)
+                    }
+                } else {
+                    BookRecognitionResultView(books: recognizedBooks) { books in
+                        saveBooks(books)
+                    }
+                }
+            }
+            .alert("Error", isPresented: $showErrorAlert) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage ?? "An unknown error occurred")
             }
         }
     }
     
     private func processImage(_ image: UIImage) {
-        showProcessing = true
-        ocrService.recognizeBooks(from: image) { books in
-            DispatchQueue.main.async {
+        Task { @MainActor in
+            showProcessing = true
+            recognizedBooks = []
+            ocrBooks = []
+            aiBooks = []
+            
+            do {
+                switch settings.scanMethod {
+                case .ocr:
+                    let books = try await ocrService.recognizeBooks(from: image)
+                    showProcessing = false
+                    recognizedBooks = books
+                    ocrBooks = books
+                    
+                    if books.isEmpty {
+                        showError("No books detected in image")
+                    } else {
+                        showResult = true
+                    }
+                    
+                case .ai:
+                    let books = try await aiService.recognizeBooks(from: image)
+                    showProcessing = false
+                    recognizedBooks = books
+                    aiBooks = books
+                    
+                    if books.isEmpty {
+                        showError("No books detected in image")
+                    } else {
+                        showResult = true
+                    }
+                    
+                case .both:
+                    async let ocrTask = ocrService.recognizeBooks(from: image)
+                    async let aiTask = aiService.recognizeBooks(from: image)
+                    
+                    let (ocrResult, aiResult) = try await (ocrTask, aiTask)
+                    
+                    showProcessing = false
+                    ocrBooks = ocrResult
+                    aiBooks = aiResult
+                    
+                    if settings.compareResults {
+                        showResult = true
+                    } else {
+                        recognizedBooks = ocrResult + aiResult
+                        showResult = true
+                    }
+                }
+            } catch {
                 showProcessing = false
-                recognizedBooks = books
-                showResult = true
+                showError(error.localizedDescription)
             }
+        }
+    }
+    
+    private func showError(_ message: String) {
+        Task { @MainActor in
+            self.errorMessage = message
+            self.showErrorAlert = true
         }
     }
     
@@ -80,13 +214,14 @@ struct CameraView: View {
 
 struct ImagePicker: UIViewControllerRepresentable {
     @Binding var image: UIImage?
+    var sourceType: UIImagePickerController.SourceType
     var onImageSelected: (UIImage) -> Void
     @Environment(\.dismiss) var dismiss
     
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.delegate = context.coordinator
-        picker.sourceType = .camera
+        picker.sourceType = sourceType
         picker.allowsEditing = false
         return picker
     }

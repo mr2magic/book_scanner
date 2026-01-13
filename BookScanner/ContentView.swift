@@ -16,6 +16,24 @@ struct ContentView: View {
                     Label("Library", systemImage: "books.vertical.fill")
                 }
                 .tag(1)
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape.fill")
+                }
+                .tag(2)
+            
+            TestScanView()
+                .tabItem {
+                    Label("Test", systemImage: "checkmark.circle.fill")
+                }
+                .tag(3)
+            
+            TestSuiteView()
+                .tabItem {
+                    Label("Test Suite", systemImage: "list.bullet.rectangle")
+                }
+                .tag(4)
         }
     }
 }
