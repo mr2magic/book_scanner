@@ -558,3 +558,170 @@
 ---
 
 **Session End:** Version 1.1 complete with auto-save, multi-line parsing, hang prevention, case normalization, improved author detection, and proper edit state management. App is stable and production-ready.
+
+---
+
+## Session 3 - January 13, 2025
+
+### What We Accomplished
+
+1. **Select All Functionality**
+   - Added "Select All" / "Deselect All" button in edit mode
+   - Allows users to quickly select all books for bulk operations
+   - Button text dynamically changes based on selection state
+   - Enables efficient bulk deletion of all records
+
+2. **Bulk Edit Feature**
+   - Created new `BulkEditView.swift` for editing multiple books simultaneously
+   - Added "Edit (X)" button in toolbar when books are selected in edit mode
+   - Bulk edit supports:
+     - **Publisher**: Set new publisher value or clear existing publisher
+     - **Notes**: Set new notes or clear existing notes
+   - Empty fields preserve existing values (only updates if user enters text)
+   - Toggle options to clear publisher/notes fields
+   - Changes applied to all selected books at once
+
+3. **Project File Updates**
+   - Added `BulkEditView.swift` to Xcode project file references
+   - Updated build phases to include new view file
+   - Ensured proper integration with existing codebase
+
+### What We Learned
+
+**Technical Discoveries:**
+
+1. **SwiftData Model Updates:**
+   - SwiftData models should be updated directly, not replaced with new instances
+   - Creating new Book instances doesn't work with SwiftData - must update existing instances
+   - Direct property updates on existing models automatically track changes
+
+2. **Bulk Operations Pattern:**
+   - Selection state management requires careful tracking of selected IDs
+   - Edit mode UI should show different toolbar items based on selection state
+   - Bulk operations need to iterate through selected items and apply changes
+
+3. **Xcode Project File Management:**
+   - Adding new files requires updates to multiple sections:
+     - PBXBuildFile section (build file reference)
+     - PBXFileReference section (file reference)
+     - PBXGroup section (file group membership)
+     - PBXSourcesBuildPhase section (source compilation)
+   - Each requires unique ID generation
+
+**Decisions Made:**
+
+1. **Bulk Edit Scope:**
+   - **Decision:** Only allow bulk editing of Publisher and Notes fields
+   - **Reasoning:** Title and Author are core identifying fields that should remain unique per book. Publisher and Notes are metadata that can be shared across books
+   - **Trade-off:** Limited flexibility but prevents accidental data corruption
+
+2. **Preserve vs Overwrite:**
+   - **Decision:** Empty fields in bulk edit preserve existing values
+   - **Reasoning:** Users may want to update only one field without affecting others
+   - **Trade-off:** Slightly less intuitive but more flexible and safer
+
+3. **Clear Toggle Design:**
+   - **Decision:** Add toggle switches to explicitly clear publisher/notes
+   - **Reasoning:** Makes it clear when user wants to remove data vs preserve it
+   - **Trade-off:** Adds UI complexity but prevents accidental data loss
+
+4. **Select All Implementation:**
+   - **Decision:** Show "Select All" when not all selected, "Deselect All" when all selected
+   - **Reasoning:** Clear, intuitive button text that reflects current state
+   - **Trade-off:** Requires state checking but provides better UX
+
+**Gotchas & Pitfalls:**
+
+1. **SwiftData Model Creation:**
+   - **Problem:** Initially tried to create new Book instances in bulk edit, which doesn't work with SwiftData
+   - **Solution:** Update existing book properties directly instead of creating new instances
+   - **Lesson:** SwiftData models are managed objects - update properties, don't replace objects
+
+2. **Project File Integration:**
+   - **Problem:** Created BulkEditView.swift but forgot to add to Xcode project, causing build errors
+   - **Solution:** Manually added file references to all required project.pbxproj sections
+   - **Lesson:** Always add new files to Xcode project immediately after creation
+
+3. **Selection State Management:**
+   - **Problem:** Need to track which books are selected across view updates
+   - **Solution:** Use Set<UUID> for efficient selection tracking and lookup
+   - **Lesson:** Use appropriate data structures for selection state (Set for uniqueness and fast lookup)
+
+### Code Changes
+
+**New Files Created:**
+
+1. **BookScanner/Views/BulkEditView.swift:**
+   - New view for bulk editing multiple books
+   - Supports editing publisher and notes fields
+   - Includes toggle switches to clear fields
+   - Preserves existing values when fields are empty
+   - Updates existing Book instances directly
+
+**Modified Files:**
+
+1. **BookScanner/Views/BookListView.swift:**
+   - Added "Select All" / "Deselect All" button in edit mode toolbar
+   - Added "Edit (X)" button in trailing toolbar when books are selected
+   - Added `showBulkEditSheet` state variable
+   - Added `applyBulkEdits()` function to save bulk changes
+   - Integrated BulkEditView sheet presentation
+
+2. **BookScanner.xcodeproj/project.pbxproj:**
+   - Added BulkEditView.swift to PBXBuildFile section (BB0078)
+   - Added BulkEditView.swift to PBXFileReference section (BB0079)
+   - Added BulkEditView.swift to Views group (BB0041)
+   - Added BulkEditView.swift to Sources build phase (BB0045)
+
+**Key Improvements:**
+- Users can now select all books with one tap
+- Bulk editing allows efficient updates to multiple books
+- Publisher and notes can be updated or cleared for multiple books at once
+- Empty fields preserve existing data (safe defaults)
+
+### Next Steps
+
+1. **Bulk Edit Enhancements:**
+   - Consider adding more fields to bulk edit (e.g., ISBN, categories/tags if added)
+   - Add preview of which books will be affected
+   - Consider adding "Select None" as alternative to "Deselect All"
+
+2. **User Experience:**
+   - Add confirmation dialog for bulk operations affecting many books
+   - Show progress indicator for bulk edits on large selections
+   - Add undo functionality for bulk operations
+
+3. **Testing:**
+   - Test bulk edit with various selection sizes (1, 10, 100+ books)
+   - Verify that empty fields preserve existing values correctly
+   - Test clear toggles work as expected
+   - Verify select all/deselect all works with filtered lists
+
+4. **Documentation:**
+   - Update user guide with bulk edit instructions
+   - Document bulk operations in README
+
+**Open Questions:**
+
+1. **Bulk Edit Field Expansion:**
+   - Should we allow bulk editing of other fields (ISBN, Amazon data)?
+   - Should we add bulk category/tag assignment if those features are added?
+   - Should we allow bulk image updates?
+
+2. **Bulk Operations Safety:**
+   - Should we add a confirmation for bulk edits affecting 10+ books?
+   - Should we show a preview list of books that will be affected?
+   - Should we add undo/redo for bulk operations?
+
+3. **Selection Persistence:**
+   - Should selection persist when user navigates away and returns?
+   - Should we save selection state across app launches?
+   - Should we support saving selection as a "collection"?
+
+4. **Bulk Export:**
+   - Should we add ability to export only selected books?
+   - Should bulk export respect current selection?
+
+---
+
+**Session End:** Select All and Bulk Edit functionality complete. Users can now efficiently manage large collections with bulk operations. App version 1.1 with full CRUD and bulk operations ready for production.

@@ -35,6 +35,7 @@
 		BB0071 /* LocalizedStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0072 /* LocalizedStrings.swift */; };
 		BB0073 /* Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0074 /* Accessibility.swift */; };
 		BB0076 /* TestSuiteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0077 /* TestSuiteView.swift */; };
+		BB0078 /* BulkEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0079 /* BulkEditView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -69,6 +70,7 @@
 		BB0072 /* LocalizedStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizedStrings.swift; sourceTree = "<group>"; };
 		BB0074 /* Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accessibility.swift; sourceTree = "<group>"; };
 		BB0077 /* TestSuiteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSuiteView.swift; sourceTree = "<group>"; };
+		BB0079 /* BulkEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BulkEditView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,6 +137,7 @@
 				BB0054 /* TestScanView.swift */,
 				BB0077 /* TestSuiteView.swift */,
 				BB0056 /* AddBookView.swift */,
+				BB0079 /* BulkEditView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -244,6 +247,7 @@
 				BB0053 /* TestScanView.swift in Sources */,
 				BB0076 /* TestSuiteView.swift in Sources */,
 				BB0055 /* AddBookView.swift in Sources */,
+				BB0078 /* BulkEditView.swift in Sources */,
 				BB0057 /* Logger.swift in Sources */,
 				BB0059 /* AppError.swift in Sources */,
 				BB0061 /* AppConfiguration.swift in Sources */,

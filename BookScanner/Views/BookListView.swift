@@ -24,6 +24,7 @@ struct BookListView: View {
     @State private var selectedBooks: Set<UUID> = []
     @State private var isEditMode = false
     @State private var showBatchDeleteConfirmation = false
+    @State private var showBulkEditSheet = false
     
     var filteredAndSortedBooks: [Book] {
         var books = allBooks
@@ -135,6 +136,17 @@ struct BookListView: View {
                             selectedBooks.removeAll()
                         }
                         
+                        // Select All / Deselect All
+                        if selectedBooks.count == filteredAndSortedBooks.count && !filteredAndSortedBooks.isEmpty {
+                            Button("Deselect All") {
+                                selectedBooks.removeAll()
+                            }
+                        } else {
+                            Button("Select All") {
+                                selectedBooks = Set(filteredAndSortedBooks.map { $0.id })
+                            }
+                        }
+                        
                         if !selectedBooks.isEmpty {
                             Button("Delete (\(selectedBooks.count))") {
                                 showBatchDeleteConfirmation = true
@@ -151,20 +163,26 @@ struct BookListView: View {
                 }
                 
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        showAddBook = true
-                    }) {
-                        Label("Add Book", systemImage: "plus")
-                    }
-                    
-                    Menu {
-                        Button(action: {
-                            showExportSheet = true
-                        }) {
-                            Label("Export to CSV", systemImage: "square.and.arrow.up")
+                    if isEditMode && !selectedBooks.isEmpty {
+                        Button("Edit (\(selectedBooks.count))") {
+                            showBulkEditSheet = true
                         }
-                    } label: {
-                        Label("More", systemImage: "ellipsis.circle")
+                    } else if !isEditMode {
+                        Button(action: {
+                            showAddBook = true
+                        }) {
+                            Label("Add Book", systemImage: "plus")
+                        }
+                        
+                        Menu {
+                            Button(action: {
+                                showExportSheet = true
+                            }) {
+                                Label("Export to CSV", systemImage: "square.and.arrow.up")
+                            }
+                        } label: {
+                            Label("More", systemImage: "ellipsis.circle")
+                        }
                     }
                 }
             }
@@ -181,6 +199,15 @@ struct BookListView: View {
                 }
             } message: {
                 Text("Are you sure you want to delete \(selectedBooks.count) book(s)? This action cannot be undone.")
+            }
+            .sheet(isPresented: $showBulkEditSheet) {
+                BulkEditView(
+                    selectedBookIds: selectedBooks,
+                    allBooks: allBooks,
+                    onSave: { updatedBooks in
+                        applyBulkEdits(to: updatedBooks)
+                    }
+                )
             }
         }
     }
@@ -220,6 +247,19 @@ struct BookListView: View {
                 modelContext.delete(book)
             }
             try? modelContext.save()
+        }
+    }
+    
+    private func applyBulkEdits(to updatedBooks: [Book]) {
+        withAnimation {
+            // Books are already updated in BulkEditView, just save
+            do {
+                try modelContext.save()
+                selectedBooks.removeAll()
+                isEditMode = false
+            } catch {
+                print("Failed to save bulk edits: \(error.localizedDescription)")
+            }
         }
     }
 }
