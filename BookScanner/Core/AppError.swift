@@ -12,6 +12,7 @@ enum AppError: LocalizedError {
     case validationFailed(field: String, message: String)
     case authenticationFailed(reason: String)
     case fileSystemError(underlying: Error)
+    case bookScanFailed(bookNumber: Int, reason: String)
     case unknown(underlying: Error?)
     
     var errorDescription: String? {
@@ -36,6 +37,8 @@ enum AppError: LocalizedError {
             return "Authentication failed: \(reason)"
         case .fileSystemError(let error):
             return "File system error: \(error.localizedDescription)"
+        case .bookScanFailed(let bookNumber, let reason):
+            return "Failed to scan book #\(bookNumber): \(reason)"
         case .unknown(let error):
             return error?.localizedDescription ?? "Unknown error occurred"
         }
@@ -49,6 +52,8 @@ enum AppError: LocalizedError {
             return "Please try again with a different input."
         case .imageProcessingFailed, .ocrFailed, .aiRecognitionFailed:
             return "Please try with a clearer image or better lighting."
+        case .bookScanFailed:
+            return "Please take a new photo with better lighting or clearer text."
         case .databaseError:
             return "Please restart the app. If the problem persists, contact support."
         case .validationFailed:

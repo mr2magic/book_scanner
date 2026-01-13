@@ -4,32 +4,44 @@ import SwiftData
 struct BookDetailView: View {
     @Bindable var book: Book
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var amazonService = AmazonService()
     @State private var showAmazonLookup = false
     @State private var isLookingUp = false
     @State private var showDeleteConfirmation = false
     @State private var showImagePicker = false
     @State private var showValidationError = false
-    @State private var validationMessage = ""
+    @State private var validationMessage: String = ""
+    @State private var hasSaved: Bool = false
+    
+    // Local state for editing (only saved when user clicks Save)
+    @State private var editedTitle: String = ""
+    @State private var editedAuthor: String = ""
+    @State private var editedPublisher: String = ""
+    @State private var editedISBN: String = ""
+    @State private var editedNotes: String = ""
+    @State private var editedImageData: Data? = nil
+    
+    // Store original values to revert on cancel
+    @State private var originalTitle: String = ""
+    @State private var originalAuthor: String = ""
+    @State private var originalPublisher: String? = nil
+    @State private var originalISBN: String? = nil
+    @State private var originalNotes: String? = nil
+    @State private var originalImageData: Data? = nil
     
     var body: some View {
         Form {
             Section("Book Information") {
-                TextField("Title *", text: $book.title)
-                TextField("Author *", text: $book.author)
-                TextField("Publisher", text: Binding(
-                    get: { book.publisher ?? "" },
-                    set: { book.publisher = $0.isEmpty ? nil : $0 }
-                ))
-                TextField("ISBN", text: Binding(
-                    get: { book.isbn ?? "" },
-                    set: { book.isbn = $0.isEmpty ? nil : $0 }
-                ))
-                .keyboardType(.numberPad)
+                TextField("Title *", text: $editedTitle)
+                TextField("Author *", text: $editedAuthor)
+                TextField("Publisher", text: $editedPublisher)
+                TextField("ISBN", text: $editedISBN)
+                    .keyboardType(.numberPad)
             }
             
             Section("Cover Image") {
-                if let imageData = book.imageData, let uiImage = UIImage(data: imageData) {
+                if let imageData = editedImageData, let uiImage = UIImage(data: imageData) {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFit()
@@ -41,9 +53,9 @@ struct BookDetailView: View {
                     showImagePicker = true
                 }
                 
-                if book.imageData != nil {
+                if editedImageData != nil {
                     Button(role: .destructive) {
-                        book.imageData = nil
+                        editedImageData = nil
                     } label: {
                         Text("Remove Image")
                     }
@@ -80,11 +92,8 @@ struct BookDetailView: View {
             }
             
             Section("Notes") {
-                TextEditor(text: Binding(
-                    get: { book.notes ?? "" },
-                    set: { book.notes = $0.isEmpty ? nil : $0 }
-                ))
-                .frame(minHeight: 100)
+                TextEditor(text: $editedNotes)
+                    .frame(minHeight: 100)
             }
             
             Section {
@@ -100,6 +109,13 @@ struct BookDetailView: View {
         }
         .navigationTitle("Book Details")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") {
+                    saveBook()
+                }
+            }
+        }
         .alert("Delete Book", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
@@ -115,15 +131,53 @@ struct BookDetailView: View {
         }
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(image: .constant(nil), sourceType: .photoLibrary) { image in
-                book.imageData = image.jpegData(compressionQuality: 0.8)
+                editedImageData = image.jpegData(compressionQuality: 0.8)
             }
         }
-        .onChange(of: book.title) { _, newValue in
-            validateBook()
+        .onAppear {
+            // Initialize local state from book when view appears
+            loadBookData()
         }
-        .onChange(of: book.author) { _, newValue in
-            validateBook()
+        .onDisappear {
+            // Revert changes if user navigates back without saving
+            if !hasSaved {
+                revertChanges()
+            }
         }
+    }
+    
+    private func loadBookData() {
+        // Store original values
+        originalTitle = book.title
+        originalAuthor = book.author
+        originalPublisher = book.publisher
+        originalISBN = book.isbn
+        originalNotes = book.notes
+        originalImageData = book.imageData
+        
+        // Initialize edited values
+        editedTitle = book.title
+        editedAuthor = book.author
+        editedPublisher = book.publisher ?? ""
+        editedISBN = book.isbn ?? ""
+        editedNotes = book.notes ?? ""
+        editedImageData = book.imageData
+        
+        // Reset save flag
+        hasSaved = false
+    }
+    
+    private func revertChanges() {
+        // Revert book to original values
+        book.title = originalTitle
+        book.author = originalAuthor
+        book.publisher = originalPublisher
+        book.isbn = originalISBN
+        book.notes = originalNotes
+        book.imageData = originalImageData
+        
+        // Discard any unsaved changes in the model context
+        modelContext.rollback()
     }
     
     private func lookupOnAmazon() {
@@ -147,22 +201,53 @@ struct BookDetailView: View {
         try? modelContext.save()
     }
     
-    private func validateBook() {
-        if book.title.trimmingCharacters(in: .whitespaces).isEmpty {
+    private func saveBook() {
+        // Validate before saving
+        if editedTitle.trimmingCharacters(in: .whitespaces).isEmpty {
             validationMessage = "Title is required"
             showValidationError = true
-        } else if book.author.trimmingCharacters(in: .whitespaces).isEmpty {
+            return
+        }
+        
+        if editedAuthor.trimmingCharacters(in: .whitespaces).isEmpty {
             validationMessage = "Author is required"
             showValidationError = true
+            return
         }
         
         // Validate ISBN if provided
-        if let isbn = book.isbn, !isbn.isEmpty {
-            let cleanedISBN = isbn.replacingOccurrences(of: "-", with: "")
+        if !editedISBN.isEmpty {
+            let cleanedISBN = editedISBN.replacingOccurrences(of: "-", with: "")
             if cleanedISBN.count != 10 && cleanedISBN.count != 13 {
                 validationMessage = "ISBN must be 10 or 13 digits"
                 showValidationError = true
+                return
             }
+        }
+        
+        // Apply edited values to book model
+        book.title = editedTitle.trimmingCharacters(in: .whitespaces)
+        book.author = editedAuthor.trimmingCharacters(in: .whitespaces)
+        book.publisher = editedPublisher.trimmingCharacters(in: .whitespaces).isEmpty ? nil : editedPublisher.trimmingCharacters(in: .whitespaces)
+        book.isbn = editedISBN.trimmingCharacters(in: .whitespaces).isEmpty ? nil : editedISBN.trimmingCharacters(in: .whitespaces)
+        book.notes = editedNotes.trimmingCharacters(in: .whitespaces).isEmpty ? nil : editedNotes.trimmingCharacters(in: .whitespaces)
+        book.imageData = editedImageData
+        
+        // Save changes
+        do {
+            try modelContext.save()
+            hasSaved = true
+            
+            // Update original values after successful save
+            originalTitle = book.title
+            originalAuthor = book.author
+            originalPublisher = book.publisher
+            originalISBN = book.isbn
+            originalNotes = book.notes
+            originalImageData = book.imageData
+        } catch {
+            validationMessage = "Failed to save: \(error.localizedDescription)"
+            showValidationError = true
         }
     }
 }

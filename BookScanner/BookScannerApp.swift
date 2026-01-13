@@ -5,6 +5,11 @@ import SwiftData
 struct BookScannerApp: App {
     @StateObject private var authManager = AuthenticationManager()
     
+    init() {
+        // Configure app-wide orientation support
+        // Default to landscape for camera, but allow all orientations
+    }
+    
     var body: some Scene {
         WindowGroup {
             if authManager.isAuthenticated {

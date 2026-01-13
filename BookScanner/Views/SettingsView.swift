@@ -6,6 +6,7 @@ class AppSettings: ObservableObject {
     @Published var amazonSecretKey: String = ""
     @Published var amazonAssociateTag: String = ""
     @Published var compareResults: Bool = true
+    @Published var useFullImageScan: Bool = false
     
     enum ScanMethod: String, CaseIterable {
         case ocr = "OCR"
@@ -23,6 +24,7 @@ class AppSettings: ObservableObject {
         UserDefaults.standard.set(amazonSecretKey, forKey: "amazonSecretKey")
         UserDefaults.standard.set(amazonAssociateTag, forKey: "amazonAssociateTag")
         UserDefaults.standard.set(compareResults, forKey: "compareResults")
+        UserDefaults.standard.set(useFullImageScan, forKey: "useFullImageScan")
     }
     
     private func loadSettings() {
@@ -34,6 +36,7 @@ class AppSettings: ObservableObject {
         amazonSecretKey = UserDefaults.standard.string(forKey: "amazonSecretKey") ?? ""
         amazonAssociateTag = UserDefaults.standard.string(forKey: "amazonAssociateTag") ?? ""
         compareResults = UserDefaults.standard.bool(forKey: "compareResults")
+        useFullImageScan = UserDefaults.standard.bool(forKey: "useFullImageScan")
     }
 }
 
@@ -55,6 +58,11 @@ struct SettingsView: View {
                     
                     Toggle("Compare OCR vs AI Results", isOn: $settings.compareResults)
                         .onChange(of: settings.compareResults) { _, _ in
+                            settings.saveSettings()
+                        }
+                    
+                    Toggle("Use Full Image Scan (Test Mode)", isOn: $settings.useFullImageScan)
+                        .onChange(of: settings.useFullImageScan) { _, _ in
                             settings.saveSettings()
                         }
                 }
@@ -90,7 +98,7 @@ struct SettingsView: View {
                     HStack {
                         Text("Version")
                         Spacer()
-                        Text("1.0.0")
+                        Text("1.1.0")
                             .foregroundColor(.secondary)
                     }
                 }

@@ -5,38 +5,39 @@
 	};
 	objectVersion = 56;
 	objects = {
+
 /* Begin PBXBuildFile section */
-		BB0001 /* BookScannerApp.swift */ = {isa = PBXBuildFile; fileRef = BB0002 /* BookScannerApp.swift */; };
-		BB0003 /* ContentView.swift */ = {isa = PBXBuildFile; fileRef = BB0004 /* ContentView.swift */; };
-		BB0005 /* Book.swift */ = {isa = PBXBuildFile; fileRef = BB0006 /* Book.swift */; };
-		BB0007 /* AuthenticationView.swift */ = {isa = PBXBuildFile; fileRef = BB0008 /* AuthenticationView.swift */; };
-		BB0009 /* CameraView.swift */ = {isa = PBXBuildFile; fileRef = BB0010 /* CameraView.swift */; };
-		BB0011 /* BookListView.swift */ = {isa = PBXBuildFile; fileRef = BB0012 /* BookListView.swift */; };
-		BB0013 /* BookDetailView.swift */ = {isa = PBXBuildFile; fileRef = BB0014 /* BookDetailView.swift */; };
-		BB0015 /* ExportView.swift */ = {isa = PBXBuildFile; fileRef = BB0016 /* ExportView.swift */; };
-		BB0017 /* SettingsView.swift */ = {isa = PBXBuildFile; fileRef = BB0018 /* SettingsView.swift */; };
-		BB0019 /* ComparisonView.swift */ = {isa = PBXBuildFile; fileRef = BB0020 /* ComparisonView.swift */; };
-		BB0053 /* TestScanView.swift */ = {isa = PBXBuildFile; fileRef = BB0054 /* TestScanView.swift */; };
-		BB0076 /* TestSuiteView.swift */ = {isa = PBXBuildFile; fileRef = BB0077 /* TestSuiteView.swift */; };
-		BB0055 /* AddBookView.swift */ = {isa = PBXBuildFile; fileRef = BB0056 /* AddBookView.swift */; };
-		BB0057 /* Logger.swift */ = {isa = PBXBuildFile; fileRef = BB0058 /* Logger.swift */; };
-		BB0059 /* AppError.swift */ = {isa = PBXBuildFile; fileRef = BB0060 /* AppError.swift */; };
-		BB0061 /* AppConfiguration.swift */ = {isa = PBXBuildFile; fileRef = BB0062 /* AppConfiguration.swift */; };
-		BB0063 /* ImageCache.swift */ = {isa = PBXBuildFile; fileRef = BB0064 /* ImageCache.swift */; };
-		BB0065 /* DependencyContainer.swift */ = {isa = PBXBuildFile; fileRef = BB0066 /* DependencyContainer.swift */; };
-		BB0067 /* BackgroundTaskManager.swift */ = {isa = PBXBuildFile; fileRef = BB0068 /* BackgroundTaskManager.swift */; };
-		BB0069 /* RetryManager.swift */ = {isa = PBXBuildFile; fileRef = BB0070 /* RetryManager.swift */; };
-		BB0071 /* LocalizedStrings.swift */ = {isa = PBXBuildFile; fileRef = BB0072 /* LocalizedStrings.swift */; };
-		BB0073 /* Accessibility.swift */ = {isa = PBXBuildFile; fileRef = BB0074 /* Accessibility.swift */; };
-		BB0021 /* OCRService.swift */ = {isa = PBXBuildFile; fileRef = BB0022 /* OCRService.swift */; };
-		BB0023 /* AIService.swift */ = {isa = PBXBuildFile; fileRef = BB0024 /* AIService.swift */; };
-		BB0025 /* CSVExportService.swift */ = {isa = PBXBuildFile; fileRef = BB0026 /* CSVExportService.swift */; };
-		BB0027 /* AmazonService.swift */ = {isa = PBXBuildFile; fileRef = BB0028 /* AmazonService.swift */; };
-		BB0029 /* AmazonLookupService.swift */ = {isa = PBXBuildFile; fileRef = BB0030 /* AmazonLookupService.swift */; };
-		BB0031 /* Assets.xcassets */ = {isa = PBXBuildFile; fileRef = BB0032 /* Assets.xcassets */; };
+		BB0001 /* BookScannerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0002 /* BookScannerApp.swift */; };
+		BB0003 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0004 /* ContentView.swift */; };
+		BB0005 /* Book.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0006 /* Book.swift */; };
+		BB0007 /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0008 /* AuthenticationView.swift */; };
+		BB0009 /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0010 /* CameraView.swift */; };
+		BB0011 /* BookListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0012 /* BookListView.swift */; };
+		BB0013 /* BookDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0014 /* BookDetailView.swift */; };
+		BB0015 /* ExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0016 /* ExportView.swift */; };
+		BB0017 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0018 /* SettingsView.swift */; };
+		BB0019 /* ComparisonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0020 /* ComparisonView.swift */; };
+		BB0021 /* OCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0022 /* OCRService.swift */; };
+		BB0023 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0024 /* AIService.swift */; };
+		BB0025 /* CSVExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0026 /* CSVExportService.swift */; };
+		BB0027 /* AmazonService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0028 /* AmazonService.swift */; };
+		BB0029 /* AmazonLookupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0030 /* AmazonLookupService.swift */; };
+		BB0031 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB0032 /* Assets.xcassets */; };
+		BB0053 /* TestScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0054 /* TestScanView.swift */; };
+		BB0055 /* AddBookView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0056 /* AddBookView.swift */; };
+		BB0057 /* Logger.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0058 /* Logger.swift */; };
+		BB0059 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0060 /* AppError.swift */; };
+		BB0061 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0062 /* AppConfiguration.swift */; };
+		BB0063 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0064 /* ImageCache.swift */; };
+		BB0065 /* DependencyContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0066 /* DependencyContainer.swift */; };
+		BB0067 /* BackgroundTaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0068 /* BackgroundTaskManager.swift */; };
+		BB0069 /* RetryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0070 /* RetryManager.swift */; };
+		BB0071 /* LocalizedStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0072 /* LocalizedStrings.swift */; };
+		BB0073 /* Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0074 /* Accessibility.swift */; };
+		BB0076 /* TestSuiteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0077 /* TestSuiteView.swift */; };
 /* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
-		BB0033 /* BookScanner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BookScanner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB0002 /* BookScannerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookScannerApp.swift; sourceTree = "<group>"; };
 		BB0004 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		BB0006 /* Book.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Book.swift; sourceTree = "<group>"; };
@@ -47,8 +48,16 @@
 		BB0016 /* ExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportView.swift; sourceTree = "<group>"; };
 		BB0018 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		BB0020 /* ComparisonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComparisonView.swift; sourceTree = "<group>"; };
+		BB0022 /* OCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRService.swift; sourceTree = "<group>"; };
+		BB0024 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
+		BB0026 /* CSVExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportService.swift; sourceTree = "<group>"; };
+		BB0028 /* AmazonService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmazonService.swift; sourceTree = "<group>"; };
+		BB0030 /* AmazonLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmazonLookupService.swift; sourceTree = "<group>"; };
+		BB0032 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BB0033 /* BookScanner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BookScanner.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB0034 /* BookScanner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BookScanner.entitlements; sourceTree = "<group>"; };
+		BB0035 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BB0054 /* TestScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestScanView.swift; sourceTree = "<group>"; };
-		BB0077 /* TestSuiteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSuiteView.swift; sourceTree = "<group>"; };
 		BB0056 /* AddBookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddBookView.swift; sourceTree = "<group>"; };
 		BB0058 /* Logger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Logger.swift; sourceTree = "<group>"; };
 		BB0060 /* AppError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppError.swift; sourceTree = "<group>"; };
@@ -59,15 +68,9 @@
 		BB0070 /* RetryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RetryManager.swift; sourceTree = "<group>"; };
 		BB0072 /* LocalizedStrings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizedStrings.swift; sourceTree = "<group>"; };
 		BB0074 /* Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accessibility.swift; sourceTree = "<group>"; };
-		BB0022 /* OCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OCRService.swift; sourceTree = "<group>"; };
-		BB0024 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
-		BB0026 /* CSVExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CSVExportService.swift; sourceTree = "<group>"; };
-		BB0028 /* AmazonService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmazonService.swift; sourceTree = "<group>"; };
-		BB0030 /* AmazonLookupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmazonLookupService.swift; sourceTree = "<group>"; };
-		BB0032 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		BB0034 /* BookScanner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BookScanner.entitlements; sourceTree = "<group>"; };
-		BB0035 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BB0077 /* TestSuiteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSuiteView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		BB0036 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
@@ -77,6 +80,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
 		BB0037 = {
 			isa = PBXGroup;
@@ -164,6 +168,7 @@
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
+
 /* Begin PBXNativeTarget section */
 		BB0043 /* BookScanner */ = {
 			isa = PBXNativeTarget;
@@ -183,6 +188,7 @@
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
+
 /* Begin PBXProject section */
 		BB0047 /* Project object */ = {
 			isa = PBXProject;
@@ -208,52 +214,55 @@
 			);
 		};
 /* End PBXProject section */
+
 /* Begin PBXResourcesBuildPhase section */
 		BB0046 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BB0031 /* Assets.xcassets */,
+				BB0031 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		BB0045 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BB0001 /* BookScannerApp.swift */,
-				BB0003 /* ContentView.swift */,
-				BB0005 /* Book.swift */,
-				BB0007 /* AuthenticationView.swift */,
-				BB0009 /* CameraView.swift */,
-				BB0011 /* BookListView.swift */,
-				BB0013 /* BookDetailView.swift */,
-				BB0015 /* ExportView.swift */,
-				BB0017 /* SettingsView.swift */,
-				BB0019 /* ComparisonView.swift */,
-				BB0053 /* TestScanView.swift */,
-				BB0076 /* TestSuiteView.swift */,
-				BB0055 /* AddBookView.swift */,
-				BB0057 /* Logger.swift */,
-				BB0059 /* AppError.swift */,
-				BB0061 /* AppConfiguration.swift */,
-				BB0063 /* ImageCache.swift */,
-				BB0065 /* DependencyContainer.swift */,
-				BB0067 /* BackgroundTaskManager.swift */,
-				BB0069 /* RetryManager.swift */,
-				BB0071 /* LocalizedStrings.swift */,
-				BB0073 /* Accessibility.swift */,
-				BB0021 /* OCRService.swift */,
-				BB0023 /* AIService.swift */,
-				BB0025 /* CSVExportService.swift */,
-				BB0027 /* AmazonService.swift */,
-				BB0029 /* AmazonLookupService.swift */,
+				BB0001 /* BookScannerApp.swift in Sources */,
+				BB0003 /* ContentView.swift in Sources */,
+				BB0005 /* Book.swift in Sources */,
+				BB0007 /* AuthenticationView.swift in Sources */,
+				BB0009 /* CameraView.swift in Sources */,
+				BB0011 /* BookListView.swift in Sources */,
+				BB0013 /* BookDetailView.swift in Sources */,
+				BB0015 /* ExportView.swift in Sources */,
+				BB0017 /* SettingsView.swift in Sources */,
+				BB0019 /* ComparisonView.swift in Sources */,
+				BB0053 /* TestScanView.swift in Sources */,
+				BB0076 /* TestSuiteView.swift in Sources */,
+				BB0055 /* AddBookView.swift in Sources */,
+				BB0057 /* Logger.swift in Sources */,
+				BB0059 /* AppError.swift in Sources */,
+				BB0061 /* AppConfiguration.swift in Sources */,
+				BB0063 /* ImageCache.swift in Sources */,
+				BB0065 /* DependencyContainer.swift in Sources */,
+				BB0067 /* BackgroundTaskManager.swift in Sources */,
+				BB0069 /* RetryManager.swift in Sources */,
+				BB0071 /* LocalizedStrings.swift in Sources */,
+				BB0073 /* Accessibility.swift in Sources */,
+				BB0021 /* OCRService.swift in Sources */,
+				BB0023 /* AIService.swift in Sources */,
+				BB0025 /* CSVExportService.swift in Sources */,
+				BB0027 /* AmazonService.swift in Sources */,
+				BB0029 /* AmazonLookupService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
 /* Begin XCBuildConfiguration section */
 		BB0049 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -381,6 +390,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = LVK5C2V4J8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BookScanner/Info.plist;
@@ -388,15 +398,15 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.bookscanner.app;
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.danielhorn.bookscanner;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -418,6 +428,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = LVK5C2V4J8;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BookScanner/Info.plist;
@@ -425,15 +436,15 @@
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.bookscanner.app;
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.danielhorn.bookscanner;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator macosx";
@@ -447,6 +458,7 @@
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
+
 /* Begin XCConfigurationList section */
 		BB0044 /* Build configuration list for PBXNativeTarget "BookScanner" */ = {
 			isa = XCConfigurationList;

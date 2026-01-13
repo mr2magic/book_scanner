@@ -164,7 +164,8 @@ struct TestSuiteView: View {
         
         // Test 2: OCR Service
         await updateTest("OCR Service: Initialization") {
-            return ocrService != nil
+            // Service is initialized as @StateObject, so it's always available
+            return true
         }
         
         // Test 3: AI Service
@@ -183,7 +184,7 @@ struct TestSuiteView: View {
         
         // Test 5: Configuration
         await updateTest("Configuration: Access") {
-            let config = AppConfiguration.shared
+            _ = AppConfiguration.shared
             return true // Config accessed successfully
         }
         

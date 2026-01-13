@@ -2,8 +2,8 @@
 
 ## Current Status
 - Last Updated: January 13, 2025
-- Phase: Production-Ready Implementation & Testing
-- Version: 1.0
+- Phase: Production-Ready Implementation & Bug Fixes
+- Version: 1.1
 - Build Status: ✅ SUCCESS
 
 ## Session 1 - January 13, 2025
@@ -311,3 +311,250 @@
 ---
 
 **Session End:** All features implemented, tested, and documented. App is production-ready for Version 1.0.
+
+---
+
+## Session 2 - January 13, 2025
+
+### What We Accomplished
+
+1. **Version Update**
+   - Updated app version from 1.0 to 1.1
+   - Updated version display in CameraView and SettingsView
+   - Updated MARKETING_VERSION in project.pbxproj
+
+2. **Database Auto-Save Fix**
+   - Fixed critical bug where scanned books were not being saved to database
+   - Implemented auto-save immediately after scanning completes
+   - Books now automatically appear in Library tab after scanning
+   - Review sheet still available for editing before final save
+   - Added comprehensive error handling and logging for save operations
+
+3. **Multi-Line Text Parsing Enhancement**
+   - Implemented block-based parsing system to isolate title, author, and publisher blocks
+   - Each block is processed individually for multi-line content
+   - Titles like "The Norton Anthology of" + "WORLD LITERATURE" now correctly concatenate
+   - Authors spanning multiple lines are properly combined
+   - Publishers with multiple lines are correctly handled
+   - Applied to both OCRService and AIService
+
+4. **Processing Hang Prevention**
+   - Added iteration limits (`maxIterations`) to prevent infinite loops in block isolation
+   - Implemented safety checks to force index advancement if processing gets stuck
+   - Added `lastIndex` tracking to ensure progress is always made
+   - Guaranteed minimum advancement of one position per iteration
+   - Prevents UI from freezing during book processing
+
+5. **Text Case Normalization**
+   - Added `normalizeCase()` function to convert all-caps text to proper case
+   - Detects when text is >80% uppercase and converts to capitalized format
+   - Applied to titles, authors, and publishers during processing
+   - Preserves original case for mixed-case text
+   - Example: "WORLD LITERATURE" → "World Literature"
+
+6. **Author Detection Improvements**
+   - Enhanced `isLikelyAuthorName()` to better detect multi-word author names
+   - Improved detection of names with middle names (e.g., "Hillary Rodham Clinton")
+   - Added checks for proper capitalization patterns typical of names
+   - Excludes common title words ("of", "the", etc.) from name detection
+   - Fixed issue where author lines were being misclassified as title continuations
+   - Prioritized author detection over title continuation in parsing logic
+
+7. **Edit Behavior Fix**
+   - Fixed critical UX issue where changes were saved on back navigation
+   - Implemented local state management for all editable fields
+   - Changes only saved when user explicitly clicks "Save" button
+   - Automatic revert to original values when navigating back without saving
+   - Added `hasSaved` flag to track save state
+   - Uses `modelContext.rollback()` to discard unsaved changes
+
+### What We Learned
+
+**Technical Discoveries:**
+
+1. **SwiftData Auto-Save Behavior:**
+   - SwiftData models with `@Bindable` automatically save changes when modified
+   - Direct binding to model properties causes immediate persistence
+   - Solution: Use local `@State` variables for editing, only update model on explicit save
+
+2. **Block-Based Text Parsing:**
+   - Isolating distinct blocks (title/author/publisher) before processing improves accuracy
+   - Multi-line content within each block needs separate processing logic
+   - Block transitions require careful heuristics to avoid misclassification
+   - Processing order matters: title → author → publisher
+
+3. **Infinite Loop Prevention:**
+   - Block isolation logic can get stuck if transition detection fails
+   - Iteration counters and forced advancement are essential safety measures
+   - Always ensure index advances even in ambiguous cases
+
+4. **Author Name Detection:**
+   - Multi-word names (2-4 words) with proper capitalization are likely authors
+   - Names typically don't contain title words ("of", "the", etc.)
+   - Capitalization pattern (most words start with capital) indicates names
+   - Must check for author patterns BEFORE checking title continuation patterns
+
+5. **Text Case Analysis:**
+   - Uppercase ratio calculation requires filtering to letters only
+   - Need to account for punctuation and numbers in ratio calculation
+   - 80% threshold works well for distinguishing all-caps from mixed-case
+
+**Decisions Made:**
+
+1. **Auto-Save After Scanning:**
+   - **Decision:** Automatically save books immediately after scanning completes
+   - **Reasoning:** Users expect books to appear in library immediately, reduces friction
+   - **Trade-off:** Less control but better UX - review sheet still available for edits
+
+2. **Block-Based Parsing:**
+   - **Decision:** Isolate text into distinct blocks before processing multi-line content
+   - **Reasoning:** More accurate than trying to parse everything sequentially
+   - **Trade-off:** More complex logic but significantly better accuracy for multi-line titles/authors
+
+3. **Case Normalization:**
+   - **Decision:** Convert all-caps text (>80% uppercase) to proper case
+   - **Reasoning:** Improves readability while preserving intentional capitalization
+   - **Trade-off:** May occasionally normalize intentional all-caps, but improves most cases
+
+4. **Edit State Management:**
+   - **Decision:** Use local state for editing, only save on explicit "Save" click
+   - **Reasoning:** Standard iOS pattern, prevents accidental data loss
+   - **Trade-off:** More state management but better user control
+
+5. **Author Detection Priority:**
+   - **Decision:** Check for author patterns BEFORE checking title continuation
+   - **Reasoning:** Prevents author lines from being misclassified as title continuations
+   - **Trade-off:** Slightly more processing but much better accuracy
+
+**Gotchas & Pitfalls:**
+
+1. **SwiftData Auto-Persistence:**
+   - **Problem:** Direct `@Bindable` binding to SwiftData model causes immediate saves
+   - **Solution:** Use local `@State` variables, only update model on explicit save
+   - **Lesson:** Always use intermediate state for editable fields in SwiftData views
+
+2. **Block Isolation Infinite Loops:**
+   - **Problem:** Block transition logic could get stuck if no transition detected
+   - **Solution:** Added iteration limits, forced advancement, and safety checks
+   - **Lesson:** Always add safety mechanisms for loops that process variable-length data
+
+3. **Author vs Title Classification:**
+   - **Problem:** Author names like "Hillary Rodham Clinton" were being treated as title continuations
+   - **Solution:** Prioritized author detection, improved name pattern recognition
+   - **Lesson:** Order of pattern matching matters - check more specific patterns first
+
+4. **Case Normalization Edge Cases:**
+   - **Problem:** Need to distinguish all-caps from mixed-case accurately
+   - **Solution:** Calculate uppercase ratio on letters only, use 80% threshold
+   - **Lesson:** Filter data appropriately before calculating ratios
+
+5. **Edit State Reversion:**
+   - **Problem:** `onDisappear` fires in various scenarios, not just back navigation
+   - **Solution:** Added `hasSaved` flag to only revert if save wasn't clicked
+   - **Lesson:** Track user intent explicitly, don't rely solely on lifecycle events
+
+### Code Changes
+
+**Modified Files:**
+
+1. **BookScanner/Views/CameraView.swift:**
+   - Added auto-save after scanning completes
+   - Updated completion messages to indicate books were saved
+   - Added `updateBooks()` function for review sheet edits
+   - Enhanced error handling for save operations
+
+2. **BookScanner/Services/OCRService.swift:**
+   - Implemented block-based parsing with `isolateBlocks()` function
+   - Added `processTitleBlock()`, `processAuthorBlock()`, `processPublisherBlock()`
+   - Added `isTitleContinuation()`, `isAuthorContinuation()`, `isPublisherContinuation()`
+   - Enhanced `isLikelyAuthorName()` with better multi-word name detection
+   - Added `normalizeCase()` for text case conversion
+   - Added iteration limits and safety checks to prevent hangs
+   - Improved author detection priority in title continuation logic
+
+3. **BookScanner/Services/AIService.swift:**
+   - Applied same block-based parsing improvements as OCRService
+   - Added same safety mechanisms and case normalization
+   - Improved author detection to match OCRService
+
+4. **BookScanner/Views/BookDetailView.swift:**
+   - Complete rewrite of edit state management
+   - Added local `@State` variables for all editable fields
+   - Added original value storage for revert functionality
+   - Implemented `loadBookData()` and `revertChanges()` functions
+   - Added `hasSaved` flag to track save state
+   - Only updates book model when "Save" is explicitly clicked
+   - Reverts changes on back navigation if not saved
+
+5. **BookScanner/Views/CameraView.swift:**
+   - Updated version display from "Version 1.0" to "Version 1.1"
+
+6. **BookScanner/Views/SettingsView.swift:**
+   - Updated version display from "1.0.0" to "1.1.0"
+
+7. **BookScanner.xcodeproj/project.pbxproj:**
+   - Updated MARKETING_VERSION from 1.0 to 1.1
+
+**Key Improvements:**
+- Books now auto-save after scanning (no manual save required)
+- Multi-line titles/authors/publishers correctly parsed and concatenated
+- Processing no longer hangs on complex images
+- All-caps text normalized to proper case
+- Author names correctly identified even with middle names
+- Edit changes only saved on explicit "Save" click
+- Back navigation reverts unsaved changes
+
+### Next Steps
+
+1. **Testing & Validation:**
+   - Test with bookshelf images containing multi-line titles
+   - Verify author detection with various name formats
+   - Test edit/revert functionality thoroughly
+   - Validate case normalization doesn't break intentional all-caps
+
+2. **Performance Monitoring:**
+   - Monitor processing times with block-based parsing
+   - Check memory usage during large batch processing
+   - Verify iteration limits don't prematurely stop processing
+
+3. **User Experience:**
+   - Consider adding "Unsaved Changes" warning when navigating away
+   - Add visual indicator when books are being saved
+   - Improve error messages for save failures
+
+4. **Edge Case Handling:**
+   - Test with books that have very long titles spanning many lines
+   - Test with books that have multiple authors on separate lines
+   - Test with books that have publisher names spanning multiple lines
+   - Verify case normalization with acronyms and proper nouns
+
+5. **Documentation:**
+   - Update user guide with new auto-save behavior
+   - Document edit/revert functionality
+   - Add examples of multi-line text parsing
+
+**Open Questions:**
+
+1. **Auto-Save vs Manual Save:**
+   - Should we add a setting to toggle auto-save behavior?
+   - Should we show a confirmation before auto-saving?
+   - Should we allow users to disable auto-save for review?
+
+2. **Case Normalization:**
+   - Should we preserve all-caps for known acronyms (e.g., "NASA", "FBI")?
+   - Should we have a whitelist of words that should remain all-caps?
+   - Should normalization be configurable per user?
+
+3. **Block Parsing Accuracy:**
+   - How to handle ambiguous cases where block boundaries are unclear?
+   - Should we add confidence scores for block classifications?
+   - Should we allow manual correction of block assignments?
+
+4. **Edit State Management:**
+   - Should we show a warning when navigating away with unsaved changes?
+   - Should we auto-save drafts periodically?
+   - Should we support undo/redo for edits?
+
+---
+
+**Session End:** Version 1.1 complete with auto-save, multi-line parsing, hang prevention, case normalization, improved author detection, and proper edit state management. App is stable and production-ready.

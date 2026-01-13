@@ -64,11 +64,20 @@ struct BookListView: View {
         NavigationView {
             VStack {
                 if filteredAndSortedBooks.isEmpty {
-                    ContentUnavailableView(
-                        "No Books",
-                        systemImage: "books.vertical",
-                        description: Text(searchText.isEmpty ? "Start by scanning your books" : "No books match your search")
-                    )
+                    VStack(spacing: 20) {
+                        ContentUnavailableView(
+                            "No Books",
+                            systemImage: "books.vertical",
+                            description: Text(searchText.isEmpty ? "Start by scanning your books or add one manually" : "No books match your search")
+                        )
+                        if searchText.isEmpty {
+                            Button("Add Book") {
+                                showAddBook = true
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .padding()
+                        }
+                    }
                 } else {
                     List {
                         // Sort and filter controls
@@ -95,6 +104,18 @@ struct BookListView: View {
                             } else {
                                 NavigationLink(destination: BookDetailView(book: book)) {
                                     BookRow(book: book)
+                                }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button(role: .destructive) {
+                                        deleteBook(book)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                    NavigationLink(destination: BookDetailView(book: book)) {
+                                        Label("Edit", systemImage: "pencil")
+                                    }
                                 }
                             }
                         }
@@ -124,7 +145,7 @@ struct BookListView: View {
                         Button(action: {
                             isEditMode = true
                         }) {
-                            Image(systemName: "checklist")
+                            Label("Select", systemImage: "checklist")
                         }
                     }
                 }
@@ -133,7 +154,7 @@ struct BookListView: View {
                     Button(action: {
                         showAddBook = true
                     }) {
-                        Image(systemName: "plus")
+                        Label("Add Book", systemImage: "plus")
                     }
                     
                     Menu {
@@ -143,7 +164,7 @@ struct BookListView: View {
                             Label("Export to CSV", systemImage: "square.and.arrow.up")
                         }
                     } label: {
-                        Image(systemName: "ellipsis.circle")
+                        Label("More", systemImage: "ellipsis.circle")
                     }
                 }
             }
@@ -185,6 +206,13 @@ struct BookListView: View {
         }
     }
     
+    private func deleteBook(_ book: Book) {
+        withAnimation {
+            modelContext.delete(book)
+            try? modelContext.save()
+        }
+    }
+    
     private func deleteBooks(at offsets: IndexSet) {
         withAnimation {
             for index in offsets {
@@ -200,7 +228,25 @@ struct BookRow: View {
     let book: Book
     
     var body: some View {
-        HStack {
+        HStack(alignment: .top, spacing: 12) {
+            // Book thumbnail if available
+            if let imageData = book.imageData, let uiImage = UIImage(data: imageData) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 60, height: 90)
+                    .cornerRadius(8)
+                    .clipped()
+            } else {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: 60, height: 90)
+                    .overlay(
+                        Image(systemName: "book.closed")
+                            .foregroundColor(.gray)
+                    )
+            }
+            
             VStack(alignment: .leading, spacing: 4) {
                 Text(book.title)
                     .font(.headline)
@@ -213,18 +259,28 @@ struct BookRow: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+                if let isbn = book.isbn {
+                    Text("ISBN: \(isbn)")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             }
+            
             Spacer()
-            if let price = book.amazonPrice {
-                VStack(alignment: .trailing) {
+            
+            VStack(alignment: .trailing, spacing: 4) {
+                if let price = book.amazonPrice {
                     Text(price)
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.green)
                 }
+                Text(book.dateAdded, style: .date)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
     }
 }
 
