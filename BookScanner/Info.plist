@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to photograph book spines for cataloging.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to select images of book spines.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>This app uses Face ID to securely authenticate access to your book catalog.</string>
+</dict>
+</plist>
